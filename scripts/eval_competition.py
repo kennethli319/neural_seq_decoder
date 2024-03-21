@@ -5,34 +5,36 @@ import numpy as np
 
 from edit_distance import SequenceMatcher
 import torch
-from dataset import SpeechDataset
+from neural_decoder.dataset import SpeechDataset
 
 import matplotlib.pyplot as plt
 
 
-from nnDecoderModel import getDatasetLoaders
-from nnDecoderModel import loadModel
-import neuralDecoder.utils.lmDecoderUtils as lmDecoderUtils
+from neural_decoder.neural_decoder_trainer import getDatasetLoaders
+from neural_decoder.neural_decoder_trainer import loadModel
+import neural_decoder.lmDecoderUtils as lmDecoderUtils
 import pickle
 import argparse
 
 parser = argparse.ArgumentParser(description="")
-parser.add_argument("--modelPath", type=str, default=None, help="Path to model")
+parser.add_argument("-m", "--modelPath", type=str, default=None, help="Path to model")
 input_args = parser.parse_args()
-
+import os
+os.environ['LD_LIBRARY_PATH'] = os.getcwd()
 
 with open(input_args.modelPath + "/args", "rb") as handle:
     args = pickle.load(handle)
 
-args["datasetPath"] = "/oak/stanford/groups/henderj/stfan/data/ptDecoder_ctc"
+args["datasetPath"] = "./data/ptDecoder_ctc"
 trainLoaders, testLoaders, loadedData = getDatasetLoaders(
-    args["datasetPath"], args["seqLen"], args["maxTimeSeriesLen"], args["batchSize"]
+    args["datasetPath"], args["batchSize"]
 )
 
-model = loadModel(input_args.modelPath, device="cpu")
+model = loadModel(input_args.modelPath, device="cuda")
 
-device = "cpu"
+device = "cuda"
 
+model.to(device)
 model.eval()
 
 rnn_outputs = {
@@ -42,7 +44,9 @@ rnn_outputs = {
     "transcriptions": [],
 }
 partition = "competition"
-for i, testDayIdx in enumerate([4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 18, 19, 20]):
+
+from tqdm import tqdm
+for i, testDayIdx in enumerate(tqdm([4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 18, 19, 20])):
     # for i, testDayIdx in enumerate(range(len(loadedData[partition]))):
     test_ds = SpeechDataset([loadedData[partition][i]])
     test_loader = torch.utils.data.DataLoader(
@@ -74,13 +78,12 @@ for i, testDayIdx in enumerate([4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 18, 19
         rnn_outputs["transcriptions"].append(transcript)
 
 
-MODEL_CACHE_DIR = "/scratch/users/stfan/huggingface"
+# MODEL_CACHE_DIR = "/scratch/users/stfan/huggingface"
 # Load OPT 6B model
-llm, llm_tokenizer = lmDecoderUtils.build_opt(
-    cacheDir=MODEL_CACHE_DIR, device="auto", load_in_8bit=True
+llm, llm_tokenizer = lmDecoderUtils.build_opt(device="auto", load_in_8bit=True
 )
 
-lmDir = "/oak/stanford/groups/henderj/stfan/code/nptlrig2/LanguageModelDecoder/examples/speech/s0/lm_order_exp/5gram/data/lang_test"
+lmDir = "./data/languageModel/"
 ngramDecoder = lmDecoderUtils.build_lm_decoder(
     lmDir, acoustic_scale=0.5, nbest=100, beam=18
 )
