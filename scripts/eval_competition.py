@@ -19,7 +19,7 @@ from tqdm import tqdm
 import os
 
 # CUDA VIS
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2"
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("-m", "--modelPath", type=str, default=None, help="Path to model")
@@ -44,8 +44,7 @@ model.eval()
 
 # MODEL_CACHE_DIR = "/scratch/users/stfan/huggingface"
 # Load OPT 6B model
-llm, llm_tokenizer = lmDecoderUtils.build_opt(device="auto", load_in_8bit=True
-)
+llm, llm_tokenizer = lmDecoderUtils.build_opt(device="auto")
 
 lmDir = "./data/speech_5gram/lang_test/"
 ngramDecoder = lmDecoderUtils.build_lm_decoder(
@@ -135,7 +134,7 @@ llm_out = lmDecoderUtils.cer_with_gpt2_decoder(
     lengthPenalty=0,
     alpha=llm_weight,
 )
-# time_per_sample = (time.time() - start_t) / len(logits)
+time_per_sample = (time.time() - start_t) / len(nbest_outputs)
 print(f"LLM decoding took {time_per_sample} seconds per sample")
 
 print(llm_out["cer"], llm_out["wer"])
@@ -229,7 +228,7 @@ llm_out = lmDecoderUtils.cer_with_gpt2_decoder(
     lengthPenalty=0,
     alpha=llm_weight,
 )
-# time_per_sample = (time.time() - start_t) / len(logits)
+time_per_sample = (time.time() - start_t) / len(nbest_outputs)
 print(f"LLM decoding took {time_per_sample} seconds per sample")
 
 print(llm_out["cer"], llm_out["wer"])

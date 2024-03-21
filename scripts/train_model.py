@@ -14,7 +14,7 @@ def main(args):
     args['seqLen'] = 150
     args['maxTimeSeriesLen'] = 1200
     args['batchSize'] = 64
-    args['lrStart'] = 0.02
+    args['lrStart'] = 0.04
     args['lrEnd'] = 0.02
     args['nUnits'] = 1024
     args['nBatch'] = 10000 #3000
