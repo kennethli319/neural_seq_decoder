@@ -4,8 +4,9 @@ from time import time
 import numpy as np
 from tqdm.notebook import trange, tqdm
 import tensorflow as tf
-
+from tqdm import tqdm
 import lm_decoder
+import torch
 
 def rnnEval_wer(r, h):
     """
@@ -72,7 +73,7 @@ def build_opt(modelName='facebook/opt-6.7b', cacheDir=None, device='auto', load_
 
     tokenizer = AutoTokenizer.from_pretrained(modelName, cache_dir=cacheDir)
     model = AutoModelForCausalLM.from_pretrained(modelName, cache_dir=cacheDir,
-                                                 device_map=device, load_in_8bit=load_in_8bit)
+                                                 device_map=device, torch_dtype=torch.bfloat16)
 
     tokenizer.padding_side = "right"
     tokenizer.pad_token = tokenizer.eos_token
@@ -148,7 +149,7 @@ def cer_with_gpt2_decoder(model, tokenizer, nbestOutputs, acousticScale,
                           alpha=1.0):
     decodedSentences = []
     confidences = []
-    for i in trange(len(nbestOutputs)):
+    for i in tqdm(range(len(nbestOutputs))):
         decoded, confidence = gpt2_lm_decode(model, tokenizer, nbestOutputs[i], acousticScale, lengthPenalty, alpha, returnConfidence=True)
         decodedSentences.append(decoded)
         confidences.append(confidence)
