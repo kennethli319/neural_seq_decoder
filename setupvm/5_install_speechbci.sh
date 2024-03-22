@@ -23,6 +23,7 @@ cd runtime/server/x86
 mkdir build && cd build
 
 sudo apt-get install zlib1g-dev
+sudo apt  install cmake 
 cmake ..
 make -j16
 
@@ -30,8 +31,7 @@ cd ..
 python setup.py install
 
 # install ND
-cd
-cd neural_seq_decoder
+cd ~/neural_seq_decoder
 pip install -e .
 # update 
 pip install protobuf==3.20
